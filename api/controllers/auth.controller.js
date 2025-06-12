@@ -4,6 +4,7 @@ import errorHandler from '../utils/error.js';
 
 export const signup = async (req, res,next) => {
    const {username, email, password} = req.body;
+   console.log('Incoming request:', req.body);
 
    if(!username || !email || !password || username === '' || email === '' || password === '') {
      // Check if any field is empty
