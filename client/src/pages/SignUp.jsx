@@ -1,6 +1,7 @@
 import { Alert, Button, Label, TextInput, Spinner } from 'flowbite-react';
 import { useState } from 'react';
 import {Link, useNavigate} from  'react-router-dom';
+import OAuth from '../components/OAuth';
 export default function SignUp() {
   const [formData, setFormData] = useState({});
   const [errorMessage, setErrorMessage] = useState('');
@@ -17,6 +18,7 @@ export default function SignUp() {
     setLoading(true);
 
     if(!formData.username || !formData.email || !formData.password) {
+      setLoading(false);
       return setErrorMessage('All fields are required');
     } 
     try {
@@ -28,24 +30,27 @@ export default function SignUp() {
         body: JSON.stringify(formData),
       });
 
-      const data = await res.json();
-
-      if(data.success == false) {
+      if (res.ok) {
+        const data = await res.json();
         setLoading(false);
-        return setErrorMessage(data.message);
-      }
-    
+        console.log(data.message);
+        navigate('/sign-in');
+      } else {
+        // Handle non-OK responses
+        const errorText = await res.text();
         setLoading(false);
-        console.log(data.message)
-        if(res.ok){
-          navigate('/sign-in');
+        try {
+          const errorData = JSON.parse(errorText);
+          setErrorMessage(errorData.message || 'Signup failed');
+        } catch (parseError) {
+          setErrorMessage('Signup failed. Please try again.');
         }
+      }
       
     } catch (error) {
       setLoading(false);
-      setErrorMessage(error.message);
-      console.log('Response:', res);
-
+      setErrorMessage(error.message || 'Something went wrong');
+      console.log('Signup error:', error);
     }
   };
 
@@ -92,6 +97,7 @@ export default function SignUp() {
               
               
             </Button>
+            <OAuth/>
           </form>
           <div className="flex gap-2 text-sm mt-5">
             <span>Have an account?</span>

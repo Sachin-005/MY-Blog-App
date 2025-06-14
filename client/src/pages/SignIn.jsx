@@ -3,7 +3,7 @@ import { useState } from 'react';
 import {Link, useNavigate} from  'react-router-dom';
 import {signInStart, signInSuccess, signInFailure} from '../redux/user/userSlice';  
 import {useDispatch, useSelector} from 'react-redux';
-
+import Oauth from '../components/OAuth';
 export default function SignIn() {
   const [formData, setFormData] = useState({});
 
@@ -35,21 +35,24 @@ export default function SignIn() {
         body: JSON.stringify(formData),
       });
 
-      const data = await res.json();
-
-      if(data.success == false) {
-       dispatch(signInFailure(data.message));
-      }
-    
-        console.log(data.message)
-        if(res.ok){
-          dispatch(signInSuccess(data));
-          navigate('/');
+      if (res.ok) {
+        const data = await res.json();
+        dispatch(signInSuccess(data));
+        navigate('/');
+      } else {
+        // Handle non-OK responses
+        const errorText = await res.text();
+        try {
+          const errorData = JSON.parse(errorText);
+          dispatch(signInFailure(errorData.message || 'Signin failed'));
+        } catch (parseError) {
+          dispatch(signInFailure('Signin failed. Please try again.'));
         }
+      }
       
     } catch (error) {
-      dispatch(signInFailure(error.message));
-
+      dispatch(signInFailure(error.message || 'Something went wrong'));
+      console.log('Signin error:', error);
     }
   };
 
@@ -92,6 +95,7 @@ export default function SignIn() {
               
               
             </Button>
+            <Oauth/>
           </form>
           <div className="flex gap-2 text-sm mt-5">
             <span>Don't have an account?</span>
