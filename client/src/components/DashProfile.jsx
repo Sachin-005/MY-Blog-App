@@ -11,6 +11,7 @@ import {
   deleteUserFailure,
   signoutSuccess,
 } from '../redux/user/userSlice';
+import { Link } from 'react-router-dom';
 
 export default function DashProfile() {
   const { currentUser } = useSelector((state) => state.user);
@@ -182,6 +183,17 @@ export default function DashProfile() {
         <Button type='submit' gradientDuoTone='purpleToBlue' outline>
           Update
         </Button>
+       {currentUser.isAdmin && (
+          <Link to={'/create-post'}>
+            <Button
+              type='button'
+              gradientDuoTone='purpleToPink'
+              className='w-full'
+            >
+              Create a post
+            </Button>
+          </Link>
+        )}
       </form>
 
       <div className='text-red-500 flex justify-between mt-5'>
