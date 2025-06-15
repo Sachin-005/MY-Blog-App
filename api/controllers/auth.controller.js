@@ -33,7 +33,7 @@ export const signin = async (req, res, next) => {
     const validPassword = bcryptjs.compareSync(password, validUser.password);
     if (!validPassword) return next(errorHandler(400, 'Invalid password'));
 
-    const token = jwt.sign({ id: validUser._id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: validUser._id, isAdmin: validUser.isAdmin}, process.env.JWT_SECRET, {
       expiresIn: '1d',
     });
 
@@ -52,7 +52,7 @@ export const google = async (req, res, next) => {
   try {
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      const token = jwt.sign({ id: existingUser._id }, process.env.JWT_SECRET);
+      const token = jwt.sign({ id: existingUser._id, isAdmin: existingUser.isAdmin}, process.env.JWT_SECRET);
       const { password, ...rest } = existingUser._doc;
       return res
         .status(200)
@@ -73,7 +73,7 @@ export const google = async (req, res, next) => {
     });
 
     await newUser.save();
-    const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET);
+    const token = jwt.sign({ id: newUser._id , isAdmin: newUser.isAdmin}, process.env.JWT_SECRET);
     const { password, ...rest } = newUser._doc;
 
     res.status(200)
