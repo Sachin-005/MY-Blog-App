@@ -1,7 +1,13 @@
-import { Alert, Button, Modal, ModalBody, TextInput } from 'flowbite-react';
+import {
+  Alert,
+  Button,
+  Label,
+  Modal,
+  ModalBody,
+  TextInput,
+} from 'flowbite-react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useEffect, useRef, useState } from 'react';
-import { HiOutlineExclamationCircle } from 'react-icons/hi';
 import {
   updateStart,
   updateSuccess,
@@ -11,50 +17,46 @@ import {
   deleteUserFailure,
   signoutSuccess,
 } from '../redux/user/userSlice';
+import { HiOutlineExclamationCircle } from 'react-icons/hi';
 import { Link } from 'react-router-dom';
 
+const DEFAULT_AVATAR = 'https://www.svgrepo.com/show/382106/default-avatar.svg';
+
 export default function DashProfile() {
-  const { currentUser } = useSelector((state) => state.user);
-  const dispatch = useDispatch();
-  const filePicker = useRef();
-
-  const [formData, setFormData] = useState({
-    username: currentUser.username,
-    email: currentUser.email,
-    profilePicture: currentUser.profilePicture,
-    password: '',
-  });
-
+  const { currentUser, error, loading } = useSelector((state) => state.user);
+  const [formData, setFormData] = useState({});
   const [updateUserSuccess, setUpdateUserSuccess] = useState(null);
   const [updateUserError, setUpdateUserError] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [tempImageUrl, setTempImageUrl] = useState('');
+  const [validImageUrl, setValidImageUrl] = useState('');
+  const [imageError, setImageError] = useState(false);
 
-  const [imageFile, setImageFile] = useState(null);
-  const [imageFileUrl, setImageFileUrl] = useState(null);
+  const dispatch = useDispatch();
 
-  // Sync image preview with formData
-  useEffect(() => {
-    if (imageFileUrl) {
-      setFormData((prev) => ({
-        ...prev,
-        profilePicture: imageFileUrl,
-      }));
-    }
-  }, [imageFileUrl]);
+  const handleImagePreview = (url) => {
+    const img = new Image();
+    img.onload = () => {
+      setImageError(false);
+      setValidImageUrl(url);
+    };
+    img.onerror = () => {
+      setImageError(true);
+      setValidImageUrl('');
+    };
+    img.src = url;
+  };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImageFile(file);
-      setImageFileUrl(URL.createObjectURL(file));
+  const handleSaveImageUrl = () => {
+    if (!imageError && validImageUrl) {
+      setFormData({ ...formData, profilePicture: validImageUrl });
+      setShowImageModal(false);
     }
   };
 
   const handleChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.id]: e.target.value,
-    }));
+    setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
@@ -62,20 +64,13 @@ export default function DashProfile() {
     setUpdateUserError(null);
     setUpdateUserSuccess(null);
 
-    const isUnchanged =
-      formData.username === currentUser.username &&
-      formData.email === currentUser.email &&
-      formData.profilePicture === currentUser.profilePicture &&
-      formData.password === '';
-
-    if (isUnchanged) {
+    if (Object.keys(formData).length === 0) {
       setUpdateUserError('No changes made');
       return;
     }
 
     try {
       dispatch(updateStart());
-
       const res = await fetch(`/api/user/update/${currentUser._id}`, {
         method: 'PUT',
         headers: {
@@ -83,9 +78,7 @@ export default function DashProfile() {
         },
         body: JSON.stringify(formData),
       });
-
       const data = await res.json();
-
       if (!res.ok) {
         dispatch(updateFailure(data.message));
         setUpdateUserError(data.message);
@@ -94,7 +87,7 @@ export default function DashProfile() {
         setUpdateUserSuccess("User's profile updated successfully");
       }
     } catch (error) {
-      dispatch(updateFailure('Failed to update profile'));
+      dispatch(updateFailure(error.message));
       setUpdateUserError(error.message);
     }
   };
@@ -135,62 +128,84 @@ export default function DashProfile() {
 
   return (
     <div className='max-w-lg mx-auto p-3 w-full'>
-      <h1 className='my-7 text-center font-semibold text-3xl'>
-        Hi, {currentUser.username}
-      </h1>
+      <h1 className='my-7 text-center font-semibold text-3xl'>Profile</h1>
+      <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
 
-      <form className='flex flex-col gap-4' onSubmit={handleSubmit}>
-        <input
-          type='file'
-          accept='image/*'
-          onChange={handleImageChange}
-          ref={filePicker}
-          hidden
-        />
-        <div
-          className='w-32 h-32 self-center cursor-pointer shadow-md overflow-hidden rounded-full'
-          onClick={() => filePicker.current.click()}
-        >
+        <Label>Profile Picture</Label>
+        <div className='w-32 h-32 self-center overflow-hidden rounded-full border-4 border-gray-300'>
           <img
-            src={imageFileUrl || currentUser.profilePicture}
+            src={
+              formData.profilePicture ||
+              currentUser.profilePicture ||
+              DEFAULT_AVATAR
+            }
             alt='user'
-            className='rounded-full w-full h-full object-cover border-8 border-[lightgray]'
+            className='w-full h-full object-cover'
+            onError={(e) => (e.target.src = DEFAULT_AVATAR)}
           />
         </div>
 
-        <TextInput
-          type='text'
-          id='username'
-          placeholder='Username'
-          value={formData.username}
-          onChange={handleChange}
-        />
-        <TextInput
-          type='email'
-          id='email'
-          placeholder='Email'
-          value={formData.email}
-          onChange={handleChange}
-        />
-        <TextInput
-          type='password'
-          id='password'
-          placeholder='Password (leave empty to keep current password)'
-          value={formData.password}
-          onChange={handleChange}
-        />
-
-        <Button type='submit' gradientDuoTone='purpleToBlue' outline>
-          Update
+        <Button
+          type='button'
+          gradientDuoTone='cyanToBlue'
+          onClick={() => {
+            setTempImageUrl(formData.profilePicture || currentUser.profilePicture || '');
+            setValidImageUrl('');
+            setShowImageModal(true);
+          }}
+        >
+          Change Profile Picture
         </Button>
-       {currentUser.isAdmin && (
+
+        <div>
+          <Label htmlFor='username'>Username</Label>
+          <TextInput
+            type='text'
+            id='username'
+            placeholder='Enter username'
+            defaultValue={currentUser.username}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor='email'>Email</Label>
+          <TextInput
+            type='email'
+            id='email'
+            placeholder='Enter email'
+            defaultValue={currentUser.email}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div>
+          <Label htmlFor='password'>Password</Label>
+          <TextInput
+            type='password'
+            id='password'
+            placeholder='Enter new password'
+            onChange={handleChange}
+          />
+        </div>
+
+        <Button
+          type='submit'
+          gradientDuoTone='purpleToBlue'
+          outline
+          disabled={loading}
+        >
+          {loading ? 'Updating...' : 'Update Profile'}
+        </Button>
+
+        {currentUser.isAdmin && (
           <Link to={'/create-post'}>
             <Button
               type='button'
               gradientDuoTone='purpleToPink'
               className='w-full'
             >
-              Create a post
+              Create a Post
             </Button>
           </Link>
         )}
@@ -200,7 +215,7 @@ export default function DashProfile() {
         <span onClick={() => setShowModal(true)} className='cursor-pointer'>
           Delete Account
         </span>
-        <span className='cursor-pointer' onClick={handleSignout}>
+        <span onClick={handleSignout} className='cursor-pointer'>
           Sign Out
         </span>
       </div>
@@ -215,8 +230,13 @@ export default function DashProfile() {
           {updateUserError}
         </Alert>
       )}
+      {error && (
+        <Alert color='failure' className='mt-5'>
+          {error}
+        </Alert>
+      )}
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete confirmation modal */}
       <Modal show={showModal} onClose={() => setShowModal(false)} popup size='md'>
         <Modal.Header />
         <Modal.Body>
@@ -231,6 +251,44 @@ export default function DashProfile() {
               </Button>
               <Button color='gray' onClick={() => setShowModal(false)}>
                 No, cancel
+              </Button>
+            </div>
+          </div>
+        </Modal.Body>
+      </Modal>
+
+      {/* Profile image modal */}
+      <Modal show={showImageModal} onClose={() => setShowImageModal(false)} popup size='md'>
+        <Modal.Header />
+        <Modal.Body>
+          <div className='flex flex-col gap-4'>
+            <h3 className='text-center text-lg font-semibold'>Update Profile Picture</h3>
+            <Label htmlFor='profileImageUrl'>Paste Image URL</Label>
+            <TextInput
+              id='profileImageUrl'
+              type='url'
+              value={tempImageUrl}
+              onChange={(e) => {
+                setTempImageUrl(e.target.value);
+                handleImagePreview(e.target.value);
+              }}
+              placeholder='https://example.com/image.jpg'
+            />
+            <div className='w-24 h-24 self-center overflow-hidden rounded-full border'>
+              <img
+                src={validImageUrl || DEFAULT_AVATAR}
+                onError={(e) => (e.target.src = DEFAULT_AVATAR)}
+                className='w-full h-full object-cover'
+                alt='Preview'
+              />
+            </div>
+            {imageError && <Alert color='failure'>Invalid image URL</Alert>}
+            <div className='flex justify-center gap-4 mt-4'>
+              <Button color='success' onClick={handleSaveImageUrl} disabled={imageError || !validImageUrl}>
+                Save
+              </Button>
+              <Button color='gray' onClick={() => setShowImageModal(false)}>
+                Cancel
               </Button>
             </div>
           </div>
