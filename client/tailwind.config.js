@@ -1,6 +1,4 @@
-import flowbitePlugin from 'flowbite/plugin'
-
-/** @type {import('tailwindcss').Config} */
+import flowbitePlugin from 'flowbite/plugin';
 export default {
   content: [
     './index.html',
@@ -10,5 +8,7 @@ export default {
   theme: {
     extend: {},
   },
-  plugins: [flowbitePlugin],
-}
+  plugins: [
+    flowbitePlugin,
+  ],
+};
