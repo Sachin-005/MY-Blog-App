@@ -84,9 +84,15 @@ export default function CreatePost() {
             }
           >
             <option value='uncategorized'>Select a category</option>
-            <option value='javascript'>JavaScript</option>
-            <option value='reactjs'>React.js</option>
-            <option value='nextjs'>Next.js</option>
+            <option value='social'>Social</option>
+            <option value='technology'>Technology</option>
+            <option value='news'>News</option>
+            <option value='lifestyle'>Lifestyle</option>
+            <option value='education'>Education</option>
+            <option value='health'>Health</option>
+            <option value='entertainment'>Entertainment</option>
+            <option value='business'>Business</option>
+            <option value='other'>Other</option>
           </Select>
         </div>
 

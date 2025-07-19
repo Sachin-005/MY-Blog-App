@@ -15,7 +15,7 @@ export default function Header() {
   const { currentUser } = useSelector((state) => state.user);
   const { theme } = useSelector((state) => state.theme);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showMobileSearch, setShowMobileSearch] = useState(false); // for mobile
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
@@ -47,105 +47,146 @@ export default function Header() {
     urlParams.set('searchTerm', searchTerm);
     const searchQuery = urlParams.toString();
     navigate(`/search?${searchQuery}`);
-    setShowMobileSearch(false); // hide after search
+    setShowMobileSearch(false);
   };
 
   return (
     <>
-      <Navbar className='border-b-2'>
-        <Link
-          to='/'
-          className='self-center whitespace-nowrap text-sm sm:text-xl font-semibold dark:text-white'
-        >
-          <span className='px-2 py-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-lg text-white'>
-            Sahand's
-          </span>{' '}
-          Blog
-        </Link>
-        {/* Desktop search */}
-        <form onSubmit={handleSubmit} className='hidden lg:block'>
-          <TextInput
-            type='text'
-            placeholder='Search...'
-            rightIcon={AiOutlineSearch}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </form>
-        {/* Mobile search toggle button */}
-        <Button
-          className='w-12 h-10 lg:hidden'
-          color='gray'
-          pill
-          onClick={() => setShowMobileSearch((prev) => !prev)}
-        >
-          <AiOutlineSearch />
-        </Button>
+      <nav className="sticky top-0 z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-md shadow-lg border-b border-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 transition-colors duration-500">
+        <div className="max-w-7xl mx-auto flex items-center justify-between px-4 py-2">
+          {/* Logo */}
+          <Link
+            to='/'
+            className='flex items-center gap-2 text-xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 drop-shadow-lg transition-transform duration-300 hover:scale-105 animate-fadeIn'
+          >
+            <span className='px-2 py-1 rounded-lg'>Sachin's</span>
+            <span className='hidden sm:inline text-gray-700 dark:text-gray-200 font-bold'>Blog</span>
+          </Link>
 
-        <div className='flex gap-2 md:order-2'>
+          {/* Desktop search */}
+          <form onSubmit={handleSubmit} className='hidden lg:block animate-fadeInUp delay-100'>
+            <TextInput
+              type='text'
+              placeholder='Search...'
+              rightIcon={AiOutlineSearch}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className='rounded-full shadow-sm focus:ring-2 focus:ring-indigo-400 transition-all duration-300'
+            />
+          </form>
+
+          {/* Mobile search toggle button */}
           <Button
-            className='w-12 h-10 hidden sm:inline'
+            className='w-12 h-10 lg:hidden bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white shadow-md hover:scale-110 transition-all duration-300'
             color='gray'
             pill
-            onClick={() => dispatch(toogleTheme())}
+            onClick={() => setShowMobileSearch((prev) => !prev)}
           >
-            {theme === 'light' ? <FaSun /> : <FaMoon />}
+            <AiOutlineSearch />
           </Button>
-          {currentUser ? (
-            <Dropdown
-              arrowIcon={false}
-              inline
-              label={
-                <Avatar alt='user' img={currentUser.profilePicture} rounded />
-              }
+
+          {/* Right side */}
+          <div className='flex gap-2 md:order-2 items-center'>
+            <Button
+              className='w-12 h-10 hidden sm:inline bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white shadow-md hover:scale-110 transition-all duration-300'
+              color='gray'
+              pill
+              onClick={() => dispatch(toogleTheme())}
             >
-              <Dropdown.Header>
-                <span className='block text-sm'>@{currentUser.username}</span>
-                <span className='block text-sm font-medium truncate'>
-                  {currentUser.email}
-                </span>
-              </Dropdown.Header>
-              <Link to={'/dashboard?tab=profile'}>
-                <Dropdown.Item>Profile</Dropdown.Item>
+              <span className='transition-transform duration-300'>{theme === 'light' ? <FaSun className="animate-spin-slow" /> : <FaMoon className="animate-spin-slow" />}</span>
+            </Button>
+            {currentUser ? (
+              <Dropdown
+                arrowIcon={false}
+                inline
+                label={
+                  <Avatar alt='user' img={currentUser.profilePicture} rounded />
+                }
+              >
+                <Dropdown.Header>
+                  <span className='block text-sm'>@{currentUser.username}</span>
+                  <span className='block text-sm font-medium truncate'>
+                    {currentUser.email}
+                  </span>
+                </Dropdown.Header>
+                <Link to={'/dashboard?tab=profile'}>
+                  <Dropdown.Item>Profile</Dropdown.Item>
+                </Link>
+                <Dropdown.Divider />
+                <Dropdown.Item onClick={handleSignout}>Sign out</Dropdown.Item>
+              </Dropdown>
+            ) : (
+              <Link to='/sign-in'>
+                <Button gradientDuoTone='purpleToBlue' outline>
+                  Sign In
+                </Button>
               </Link>
-              <Dropdown.Divider />
-              <Dropdown.Item onClick={handleSignout}>Sign out</Dropdown.Item>
-            </Dropdown>
-          ) : (
-            <Link to='/sign-in'>
-              <Button gradientDuoTone='purpleToBlue' outline>
-                Sign In
-              </Button>
-            </Link>
-          )}
-          <Navbar.Toggle />
+            )}
+          </div>
         </div>
-
-        <Navbar.Collapse>
-          <Navbar.Link active={path === '/'} as={'div'}>
-            <Link to='/'>Home</Link>
-          </Navbar.Link>
-          <Navbar.Link active={path === '/about'} as={'div'}>
-            <Link to='/about'>About</Link>
-          </Navbar.Link>
-          <Navbar.Link active={path === '/projects'} as={'div'}>
-            <Link to='/projects'>Projects</Link>
-          </Navbar.Link>
-        </Navbar.Collapse>
-      </Navbar>
-
-      {/* Mobile search input (conditionally rendered) */}
-      {showMobileSearch && (
-        <form onSubmit={handleSubmit} className='px-4 py-2 lg:hidden'>
-          <TextInput
-            type='text'
-            placeholder='Search...'
-            rightIcon={AiOutlineSearch}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </form>
-      )}
+        {/* Nav links */}
+        <div className="max-w-7xl mx-auto flex items-center justify-center gap-6 py-2 animate-fadeInUp delay-200">
+          <NavLink to="/" label="Home" active={path === '/'} />
+          <NavLink to="/about" label="About" active={path === '/about'} />
+          {/* <NavLink to="/projects" label="Projects" active={path === '/projects'} /> */}
+        </div>
+        {/* Mobile search input (conditionally rendered) */}
+        {showMobileSearch && (
+          <form onSubmit={handleSubmit} className='px-4 py-2 lg:hidden animate-fadeInUp delay-300'>
+            <TextInput
+              type='text'
+              placeholder='Search...'
+              rightIcon={AiOutlineSearch}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className='rounded-full shadow-sm focus:ring-2 focus:ring-indigo-400 transition-all duration-300'
+            />
+          </form>
+        )}
+        {/* Custom Animations */}
+        <style>{`
+          @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+          }
+          .animate-fadeIn {
+            animation: fadeIn 1.2s both;
+          }
+          @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(30px); }
+            100% { opacity: 1; transform: translateY(0); }
+          }
+          .animate-fadeInUp {
+            animation: fadeInUp 1.2s both;
+          }
+          .delay-100 { animation-delay: 0.1s; }
+          .delay-200 { animation-delay: 0.2s; }
+          .delay-300 { animation-delay: 0.3s; }
+          @keyframes spin-slow {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+          .animate-spin-slow {
+            animation: spin-slow 2.5s linear infinite;
+          }
+        `}</style>
+      </nav>
     </>
+  );
+}
+
+// NavLink component for animated underline
+function NavLink({ to, label, active }) {
+  return (
+    <Link
+      to={to}
+      className={`relative px-3 py-1 font-semibold transition-all duration-300 text-gray-700 dark:text-gray-200 hover:text-indigo-500 dark:hover:text-indigo-400 ${active ? 'text-indigo-600 dark:text-indigo-400' : ''}`}
+    >
+      <span>{label}</span>
+      <span
+        className={`absolute left-0 -bottom-1 w-full h-1 rounded bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 transition-all duration-300 ${active ? 'opacity-100 scale-x-100' : 'opacity-0 scale-x-0'}`}
+        style={{ transformOrigin: 'left' }}
+      ></span>
+    </Link>
   );
 }

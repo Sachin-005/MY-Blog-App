@@ -70,11 +70,16 @@ export default function PostPage() {
           {post && post.category}
         </Button>
       </Link>
-      <img
-        src={post && post.image}
-        alt={post && post.title}
-        className='mt-10 p-3 max-h-[600px] w-full object-cover'
-      />
+      {post && post.image && (
+        <div className="flex justify-center w-full">
+          <img
+            src={post.image}
+            alt={post.title}
+            className="mt-10 mb-4 rounded-2xl shadow-xl max-w-2xl w-full object-cover transition-transform duration-300 hover:scale-105 border border-indigo-100 dark:border-slate-700 bg-white/70 dark:bg-slate-800/70"
+            style={{ maxHeight: '420px' }}
+          />
+        </div>
+      )}
       <div className='flex justify-between p-3 border-b border-slate-500 mx-auto w-full max-w-2xl text-xs'>
         <span>{post && new Date(post.createdAt).toLocaleDateString()}</span>
         <span className='italic'>
